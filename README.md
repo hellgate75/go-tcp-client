@@ -87,7 +87,7 @@ Run it without any parameter to read the usage.
 
 
 
-## Build client and server
+## Build client
 
 Build client:
 
@@ -132,7 +132,7 @@ Plug-in commands are available for call using the client method ```common.TCPCli
 
 
 
-## Get client and server
+## Get  client and server
 
 Get server:
 
