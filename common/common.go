@@ -15,16 +15,10 @@ type CertificateKeyPair struct {
 	Key  string
 }
 
-type TCPServer interface {
-	Start() error
-
-	IsRunning() bool
-
-	Stop()
-}
-
 type TCPClient interface {
 	Open(insecureSkipVerify bool) error
+
+	ServerOS() string
 
 	IsOpen() bool
 

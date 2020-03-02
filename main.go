@@ -88,8 +88,12 @@ func main() {
 
 		}
 		Logger.Debugf("Summary:\nIp: %s\nPort: %s\ncerts: %v\nkeys: %v\n", host, port, certs, keys)
-		client.Open(true)
 		defer client.Close()
+		errOpen := client.Open(true)
+		if errOpen != nil {
+			Logger.Errorf("Client start-up error: %s\n", errOpen.Error())
+			panic(errOpen.Error())
+		}
 
 		if "shutdown" == cmd || "restart" == cmd {
 			client.SendText(cmd)

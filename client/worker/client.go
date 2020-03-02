@@ -9,6 +9,7 @@ import (
 	"github.com/hellgate75/go-tcp-client/client/proxy"
 	"github.com/hellgate75/go-tcp-client/common"
 	"github.com/hellgate75/go-tcp-client/log"
+	"time"
 )
 
 var Logger log.Logger = log.NewAppLogger("go-tcp-client", "INFO")
@@ -18,6 +19,7 @@ type tcpClient struct {
 	IpAddress string
 	Port      string
 	conn      *tls.Conn
+	OS        string
 }
 
 func (tcpClient *tcpClient) Open(insecureSkipVerify bool) error {
@@ -35,7 +37,6 @@ func (tcpClient *tcpClient) Open(insecureSkipVerify bool) error {
 	}
 	tcpClient.conn = conn
 	Logger.Debugf("client: connected to: %v", conn.RemoteAddr())
-
 	state := conn.ConnectionState()
 	for _, v := range state.PeerCertificates {
 		Logger.Debug(x509.MarshalPKIXPublicKey(v.PublicKey))
@@ -44,7 +45,21 @@ func (tcpClient *tcpClient) Open(insecureSkipVerify bool) error {
 	Logger.Debug("client: handshake: ", state.HandshakeComplete)
 	Logger.Debug("client: mutual: ", state.NegotiatedProtocolIsMutual)
 	Logger.Info("client: Connected!!")
+	Logger.Info("client: Waiting for server OS type...")
+	common.WriteString("os-name", conn)
+	time.Sleep(2 * time.Second)
+	os, errWelcome := common.ReadString(conn)
+	if errWelcome != nil {
+		Logger.Error("Error acquiring OS: ", errWelcome.Error())
+		return err
+	}
+	tcpClient.OS = os
+	Logger.Warnf("Remote server os: %s", os)
 	return nil
+}
+
+func (tcpClient *tcpClient) ServerOS() string {
+	return tcpClient.OS
 }
 
 func (tcpClient *tcpClient) IsOpen() bool {

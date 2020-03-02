@@ -1,2 +1,2 @@
 #!/bin/sh
-go run github.com/hellgate75/go-tcp-server/client $@ 
+go run github.com/hellgate75/go-tcp-client $@ 
