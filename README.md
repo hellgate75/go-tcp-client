@@ -106,8 +106,8 @@ See following sample
 package my-package
 
 import(
-	"github.com/hellgate75/go-tcp-server/client/worker"
-	"github.com/hellgate75/go-tcp-server/common"
+	"github.com/hellgate75/go-tcp-client/client/worker"
+	"github.com/hellgate75/go-tcp-client/common"
 )
 
 func myfunc() {
