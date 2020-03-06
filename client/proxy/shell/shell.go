@@ -152,6 +152,13 @@ func (shell *shell) SendMessage(conn *tls.Conn, params ...interface{}) error {
 			return errors.New(fmt.Sprintf("Receive data -> shell command: %v", script))
 		}
 		color.LightWhite.Printf("Response: %s\n", string(content))
+		if stdout != nil {
+			_, err := stdout.Write(content)
+			if err != nil {
+				return err
+			}
+		}
+		//common.Write(content, conn)
 	} else {
 		n2, err5 := common.WriteString("shell", conn)
 		if err5 != nil {

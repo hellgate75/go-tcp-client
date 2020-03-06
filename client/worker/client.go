@@ -69,8 +69,8 @@ func (tcpClient *tcpClient) Open(insecureSkipVerify bool) error {
 	}
 	Logger.Debug("client: handshake: ", state.HandshakeComplete)
 	Logger.Debug("client: mutual: ", state.NegotiatedProtocolIsMutual)
-	Logger.Info("client: Connected!!")
-	Logger.Info("client: Waiting for server OS type...")
+	Logger.Debug("client: Connected!!")
+	Logger.Debug("client: Waiting for server OS type...")
 	common.WriteString("os-name", conn)
 	time.Sleep(2 * time.Second)
 	os, errWelcome := common.ReadString(conn)
