@@ -8,11 +8,18 @@ import (
 	"io/ioutil"
 	"os"
 	"time"
+	"github.com/hellgate75/go-tcp-client/log"
 )
 
-type tranfer struct{}
+type tranfer struct{
+	logger log.Logger
+}
 
 var serverCommand string = "transfer-file"
+
+func (tranfer *tranfer) SetLogger(logger log.Logger) {
+	tranfer.logger = logger
+}
 
 func (tranfer *tranfer) SendMessage(conn *tls.Conn, params ...interface{}) error {
 	var paramsLen int = len(params)

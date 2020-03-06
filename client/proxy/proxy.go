@@ -6,11 +6,14 @@ import (
 	"github.com/hellgate75/go-tcp-client/client/proxy/shell"
 	"github.com/hellgate75/go-tcp-client/client/proxy/transfer"
 	"github.com/hellgate75/go-tcp-client/common"
+	"github.com/hellgate75/go-tcp-client/log"
 )
 
 var sendersMap map[string]common.Sender = make(map[string]common.Sender)
-
+var Logger log.Logger = nil
 var filled bool = false
+
+
 
 func initMap() {
 	sendersMap["transfer-file"] = transfer.New()
@@ -23,6 +26,7 @@ func GetSender(command string) (common.Sender, error) {
 		initMap()
 	}
 	if sender, ok := sendersMap[command]; ok {
+		sender.SetLogger(Logger)
 		return sender, nil
 	} else {
 		return nil, errors.New(fmt.Sprintf("Sender unavailable: %s", command))

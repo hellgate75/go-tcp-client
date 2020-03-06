@@ -12,9 +12,12 @@ import (
 	"os"
 	"strings"
 	"time"
+	"github.com/hellgate75/go-tcp-client/log"
 )
 
-type shell struct{}
+type shell struct{
+	logger log.Logger
+}
 
 func existsFile(file string) bool {
 	_, err1 := os.Stat(file)
@@ -33,6 +36,11 @@ func loadFile(path string) ([]byte, error) {
 }
 
 var serverCommand string = "shell"
+
+func (shell *shell) SetLogger(logger log.Logger) {
+	shell.logger = logger
+}
+
 
 func (shell *shell) SendMessage(conn *tls.Conn, params ...interface{}) error {
 	var paramsLen int = len(params)
@@ -151,7 +159,11 @@ func (shell *shell) SendMessage(conn *tls.Conn, params ...interface{}) error {
 		if errAnswer != nil {
 			return errors.New(fmt.Sprintf("Receive data -> shell command: %v", script))
 		}
-		color.LightWhite.Printf("Response: %s\n", string(content))
+		if nil != shell.logger {
+			shell.logger.Debugf("Response: %s", string(content))
+		} else {
+			color.LightWhite.Printf("Response: %s\n", string(content))
+		}
 		if stdout != nil {
 			_, err := stdout.Write(content)
 			if err != nil {
@@ -164,25 +176,49 @@ func (shell *shell) SendMessage(conn *tls.Conn, params ...interface{}) error {
 		if err5 != nil {
 			common.WriteString("exit", conn)
 			if stderr != nil {
-				stderr.Write([]byte("Error: exit shell: " + err5.Error() + "!!\n"))
+				if nil != shell.logger {
+					shell.logger.Error("Error: exit shell: " + err5.Error() + "!!")
+				} else {
+					stderr.Write([]byte("Error: exit shell: " + err5.Error() + "!!\n"))
+				}
 			} else {
-				color.Red.Println("Error: exit shell: " + err5.Error() + "!!")
+				if nil != shell.logger {
+					shell.logger.Error("Error: exit shell: " + err5.Error() + "!!")
+				} else {
+					color.Red.Println("Error: exit shell: " + err5.Error() + "!!")
+				}
 			}
 			return err5
 		}
 		if n2 == 0 {
 			common.WriteString("exit", conn)
 			if stderr != nil {
-				stderr.Write([]byte("Error: exit shell!!\n"))
+				if nil != shell.logger {
+					shell.logger.Error("Error: exit shell!!")
+				} else {
+					stderr.Write([]byte("Error: exit shell!!\n"))
+				}
 			} else {
-				color.Red.Println("Error: exit shell!!")
+				if nil != shell.logger {
+					shell.logger.Error("Error: exit shell!!")
+				} else {
+					color.Red.Println("Error: exit shell!!")
+				}
 			}
 			return errors.New("Unable to send shell command")
 		}
 		if stdout != nil {
-			stdout.Write([]byte("Shell mode : type exit command to exit the interactive mode\n"))
+			if nil != shell.logger {
+				shell.logger.Info("Shell mode : type exit command to exit the interactive mode\n")
+			} else {
+				stdout.Write([]byte("Shell mode : type exit command to exit the interactive mode\n"))
+			}
 		} else {
-			color.Yellow.Printf("Shell mode : type exit command to exit the interactive mode\n")
+			if nil != shell.logger {
+				shell.logger.Info("Shell mode : type exit command to exit the interactive mode\n")
+			} else {
+				color.LightYellow.Printf("Shell mode : type exit command to exit the interactive mode\n")
+			}
 		}
 		time.Sleep(3 * time.Second)
 		color.Green.Printf("shell> ")
@@ -192,9 +228,17 @@ func (shell *shell) SendMessage(conn *tls.Conn, params ...interface{}) error {
 			color.Yellow.Printf("Sending request to the server...\n")
 			if "exit" == strings.ToLower(currentCommand) {
 				if stdout != nil {
-					stdout.Write([]byte("Request: exit shell!!"))
+					if nil != shell.logger {
+						shell.logger.Debug("Request: exit shell!!")
+					} else {
+						stdout.Write([]byte("Request: exit shell!!"))
+					}
 				} else {
-					color.Green.Println("Request: exit shell!!")
+					if nil != shell.logger {
+						shell.logger.Debug("Request: exit shell!!")
+					} else {
+						color.Yellow.Println("Request: exit shell!!")
+					}
 				}
 				common.WriteString("exit", conn)
 				break
@@ -203,18 +247,34 @@ func (shell *shell) SendMessage(conn *tls.Conn, params ...interface{}) error {
 			if err6 != nil {
 				common.WriteString("exit", conn)
 				if stderr != nil {
-					stderr.Write([]byte("Error: exit shell: " + err6.Error() + "!!\n"))
+					if nil != shell.logger {
+						shell.logger.Error("Error: exit shell: " + err6.Error() + "!!")
+					} else {
+						stderr.Write([]byte("Error: exit shell: " + err6.Error() + "!!\n"))
+					}
 				} else {
-					color.Red.Println("Error: exit shell: " + err6.Error() + "!!")
+					if nil != shell.logger {
+						shell.logger.Error("Error: exit shell: " + err6.Error() + "!!")
+					} else {
+						color.Red.Println("Error: exit shell: " + err6.Error() + "!!")
+					}
 				}
 				return err6
 			}
 			if n3 == 0 {
 				common.WriteString("exit", conn)
 				if stderr != nil {
-					stderr.Write([]byte("Error: exit shell!!\n"))
+					if nil != shell.logger {
+						shell.logger.Error("Error: exit shell!!")
+					} else {
+						stderr.Write([]byte("Error: exit shell!!\n"))
+					}
 				} else {
-					color.Red.Println("Error: exit shell!!")
+					if nil != shell.logger {
+						shell.logger.Error("Error: exit shell!!")
+					} else {
+						color.Red.Println("Error: exit shell!!")
+					}
 				}
 				return errors.New(fmt.Sprintf("Unable to send command ->  %v", currentCommand))
 			}
@@ -223,25 +283,49 @@ func (shell *shell) SendMessage(conn *tls.Conn, params ...interface{}) error {
 			if errAnswer != nil {
 				common.WriteString("exit", conn)
 				if stderr != nil {
-					stderr.Write([]byte("Error: exit shell: " + errAnswer.Error() + "!!\n"))
+					if nil != shell.logger {
+						shell.logger.Error("Error: exit shell: " + errAnswer.Error() + "!!")
+					} else {
+						stderr.Write([]byte("Error: exit shell: " + errAnswer.Error() + "!!\n"))
+					}
 				} else {
-					color.Red.Println("Error: exit shell: " + errAnswer.Error() + "!!")
+					if nil != shell.logger {
+						shell.logger.Error("Error: exit shell: " + errAnswer.Error() + "!!")
+					} else {
+						color.Red.Println("Error: exit shell: " + errAnswer.Error() + "!!")
+					}
 				}
 				return errAnswer
 			}
 			if stdout != nil {
-				stdout.Write([]byte(fmt.Sprintf("Response: ", string(content)) + "\n"))
+				if nil != shell.logger {
+					shell.logger.Debug("Response: ", string(content))
+				} else {
+					stdout.Write([]byte(fmt.Sprintf("Response: ", string(content)) + "\n"))
+				}
 			} else {
-				fmt.Println("Response: ", string(content))
+				if nil != shell.logger {
+					shell.logger.Debug("Response: ", string(content))
+				} else {
+					color.LightWhite.Println("Response: ", string(content))
+				}
 			}
 			color.Green.Printf("shell> ")
 		}
 
 		if err := scanner.Err(); err != nil {
 			if stderr != nil {
-				stderr.Write([]byte("Error: exit shell: " + err.Error() + "!!\n"))
+				if nil != shell.logger {
+					shell.logger.Error("Error: exit shell: " + err.Error() + "!!")
+				} else {
+					stderr.Write([]byte("Error: exit shell: " + err.Error() + "!!\n"))
+				}
 			} else {
-				color.Red.Println("Error: exit shell: " + err.Error() + "!!")
+				if shell.logger != nil {
+					shell.logger.Error("Error: exit shell: " + err.Error() + "!!")
+				} else {
+					color.Red.Println("Error: exit shell: " + err.Error() + "!!")
+				}
 			}
 		}
 

@@ -172,6 +172,7 @@ func (tcpClient *tcpClient) Close() error {
 }
 
 func NewClient(cert common.CertificateKeyPair, caCert string, ipAddress string, port string) common.TCPClient {
+	proxy.Logger = Logger
 	return &tcpClient{
 		Cert:      cert,
 		IpAddress: ipAddress,
