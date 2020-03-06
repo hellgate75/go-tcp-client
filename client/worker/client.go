@@ -25,6 +25,7 @@ type tcpClient struct {
 }
 
 func (tcpClient *tcpClient) Open(insecureSkipVerify bool) error {
+	Logger.Debugf("client: using client key: <%s>, cert: <%s> ", tcpClient.Cert.Key, tcpClient.Cert.Cert)
 	cert, err := tls.LoadX509KeyPair(tcpClient.Cert.Cert, tcpClient.Cert.Key)
 	if err != nil {
 		Logger.Fatalf("server: loadkeys: %s", err)
@@ -49,7 +50,7 @@ func (tcpClient *tcpClient) Open(insecureSkipVerify bool) error {
 			Logger.Warn("No certs appended, using system certs only")
 		} else {
 			config.RootCAs = rootCAs
-			insecureSkipVerify = true
+			config.InsecureSkipVerify = true
 		}
 
 	}
