@@ -9,6 +9,7 @@ import (
 	"github.com/hellgate75/go-tcp-client/client/proxy"
 	"github.com/hellgate75/go-tcp-client/common"
 	"github.com/hellgate75/go-tcp-client/log"
+	"io/ioutil"
 	"time"
 )
 
@@ -16,6 +17,7 @@ var Logger log.Logger = log.NewAppLogger("go-tcp-client", "INFO")
 
 type tcpClient struct {
 	Cert      common.CertificateKeyPair
+	CaCert    string
 	IpAddress string
 	Port      string
 	conn      *tls.Conn
@@ -29,6 +31,28 @@ func (tcpClient *tcpClient) Open(insecureSkipVerify bool) error {
 		return errors.New(fmt.Sprintf("server: loadkeys: %s", err))
 	}
 	config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: insecureSkipVerify}
+	Logger.Debugf("client: ca cert: <%s> ", tcpClient.CaCert)
+	if "" != tcpClient.CaCert {
+		rootCAs, _ := x509.SystemCertPool()
+		if rootCAs == nil {
+			rootCAs = x509.NewCertPool()
+		}
+
+		// Read in the cert file
+		certs, err := ioutil.ReadFile(tcpClient.CaCert)
+		if err != nil {
+			Logger.Fatalf("Failed to append %q to RootCAs: %v", tcpClient.CaCert, err)
+		}
+
+		// Append our cert to the system pool
+		if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
+			Logger.Warn("No certs appended, using system certs only")
+		} else {
+			config.RootCAs = rootCAs
+			insecureSkipVerify = true
+		}
+
+	}
 	service := fmt.Sprintf("%s:%s", tcpClient.IpAddress, tcpClient.Port)
 	conn, err := tls.Dial("tcp", service, &config)
 	if err != nil {
@@ -67,6 +91,9 @@ func (tcpClient *tcpClient) IsOpen() bool {
 }
 
 func (tcpClient *tcpClient) Send(message bytes.Buffer) error {
+	if tcpClient.conn == nil {
+		return nil
+	}
 	n, err := common.Write(message.Bytes(), tcpClient.conn)
 	if err != nil {
 		Logger.Errorf("client: write: %s", err.Error())
@@ -80,6 +107,9 @@ func (tcpClient *tcpClient) Send(message bytes.Buffer) error {
 }
 
 func (tcpClient *tcpClient) SendText(message string) error {
+	if tcpClient.conn == nil {
+		return nil
+	}
 	n, err := common.WriteString(message, tcpClient.conn)
 	if err != nil {
 		Logger.Errorf("client: write: %s", err.Error())
@@ -115,6 +145,7 @@ func (tc *tcpClient) Clone() common.TCPClient {
 		Cert:      tc.Cert,
 		IpAddress: tc.IpAddress,
 		Port:      tc.Port,
+		CaCert:    tc.CaCert,
 	}
 }
 
@@ -127,18 +158,25 @@ func (tcpClient *tcpClient) Close() error {
 	return nil
 }
 
-func NewClient(cert common.CertificateKeyPair, ipAddress string, port string) common.TCPClient {
+func NewClient(cert common.CertificateKeyPair, caCert string, ipAddress string, port string) common.TCPClient {
 	return &tcpClient{
 		Cert:      cert,
 		IpAddress: ipAddress,
 		Port:      port,
+		CaCert:    caCert,
 	}
 }
 
 func (tcpClient *tcpClient) ReadAnswer() (string, error) {
+	if tcpClient.conn == nil {
+		return "", nil
+	}
 	return common.ReadString(tcpClient.conn)
 }
 
 func (tcpClient *tcpClient) ReadDataPack() ([]byte, error) {
+	if tcpClient.conn == nil {
+		return []byte{}, nil
+	}
 	return common.Read(tcpClient.conn)
 }

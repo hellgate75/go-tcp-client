@@ -151,7 +151,7 @@ func (shell *shell) SendMessage(conn *tls.Conn, params ...interface{}) error {
 		if errAnswer != nil {
 			return errors.New(fmt.Sprintf("Receive data -> shell command: %v", script))
 		}
-		color.Yellow.Printf("Response: %s\n", string(content))
+		color.LightWhite.Printf("Response: %s\n", string(content))
 	} else {
 		n2, err5 := common.WriteString("shell", conn)
 		if err5 != nil {
@@ -189,6 +189,7 @@ func (shell *shell) SendMessage(conn *tls.Conn, params ...interface{}) error {
 				} else {
 					color.Green.Println("Request: exit shell!!")
 				}
+				common.WriteString("exit", conn)
 				break
 			}
 			n3, err6 := common.WriteString(currentCommand, conn)
@@ -230,7 +231,6 @@ func (shell *shell) SendMessage(conn *tls.Conn, params ...interface{}) error {
 		}
 
 		if err := scanner.Err(); err != nil {
-			common.WriteString("exit", conn)
 			if stderr != nil {
 				stderr.Write([]byte("Error: exit shell: " + err.Error() + "!!\n"))
 			} else {
@@ -239,7 +239,6 @@ func (shell *shell) SendMessage(conn *tls.Conn, params ...interface{}) error {
 		}
 
 	}
-	common.WriteString("exit", conn)
 	return nil
 }
 func (shell *shell) Helper() string {

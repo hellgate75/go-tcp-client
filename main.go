@@ -15,6 +15,7 @@ import (
 var Logger log.Logger = log.NewAppLogger("go-tcp-client", "INFO")
 
 var certs string = ""
+var rootCA string = ""
 var keys string = ""
 var host string = ""
 var port string = ""
@@ -24,6 +25,7 @@ var fSet *flag.FlagSet
 func init() {
 	fSet = flag.NewFlagSet("go-tcp-client", flag.ContinueOnError)
 	fSet.StringVar(&certs, "certs", "certs/server.pem", "Comma separated pem server certificate list")
+	fSet.StringVar(&rootCA, "root-ca", "certs/ca.crt", "Root CA certificate for insecure server config")
 	fSet.StringVar(&keys, "keys", "certs/server.key", "Comma separated server certs keys list")
 	fSet.StringVar(&host, "ip", common.DEFAULT_CLIENT_IP_ADDRESS, "Server ip address")
 	fSet.StringVar(&port, "port", common.DEFAULT_PORT, "Server port")
@@ -31,11 +33,6 @@ func init() {
 }
 
 func main() {
-	if errParse := fSet.Parse(os.Args[1:]); errParse != nil {
-		Logger.Errorf("Error in arguments parse: %s", errParse.Error())
-		fSet.Usage()
-		os.Exit(1)
-	}
 	var commands []string = make([]string, 0)
 	var args []string = os.Args[1:]
 	var hasToken bool = false
@@ -60,9 +57,18 @@ func main() {
 		}
 
 	}
+	if errParse := fSet.Parse(os.Args[1:]); errParse != nil {
+		Logger.Errorf("Error in arguments parse: %s", errParse.Error())
+		fSet.Usage()
+		os.Exit(1)
+	}
 	if string(Logger.GetVerbosity()) != strings.ToUpper(verbosity) {
 		Logger.Debugf("Changing logger verbosity to: %s", strings.ToUpper(verbosity))
 		Logger.SetVerbosity(log.VerbosityLevelFromString(strings.ToUpper(verbosity)))
+	}
+	if string(worker.Logger.GetVerbosity()) != strings.ToUpper(verbosity) {
+		Logger.Debugf("Changing worker logger verbosity to: %s", strings.ToUpper(verbosity))
+		worker.Logger.SetVerbosity(log.VerbosityLevelFromString(strings.ToUpper(verbosity)))
 	}
 	var lenght int = len(certs)
 	if lenght > len(keys) {
@@ -72,7 +78,7 @@ func main() {
 		Cert: certs,
 		Key:  keys,
 	}
-	client := worker.NewClient(certPair, host, port)
+	client := worker.NewClient(certPair, rootCA, host, port)
 	if len(commands) > 0 {
 		var cmd string = commands[0]
 
@@ -137,10 +143,19 @@ func main() {
 		}
 
 		var commandArgs []string = commands[1:]
-		Logger.Tracef("Command Args: (len: %v) %v", len(commandArgs), commandArgs)
+		Logger.Debugf("Command Args: (len: %v) %v", len(commandArgs), commandArgs)
 		var params []interface{} = make([]interface{}, 0)
-		for _, val := range commandArgs {
-			params = append(params, val)
+		if "shell" == strings.ToLower(cmd) {
+			if len(commandArgs) > 0 {
+				params = append(params, commandArgs[0])
+			}
+			if len(commandArgs) > 1 {
+				params = append(params, strings.Join(commandArgs[1:], " "))
+			}
+		} else {
+			for _, val := range commandArgs {
+				params = append(params, val)
+			}
 		}
 		Logger.Tracef("Params: (len: %v) %v", len(params), params)
 		err1 := client.ApplyCommand(cmd, params...)
@@ -152,10 +167,11 @@ func main() {
 		time.Sleep(3 * time.Second)
 		answer, err2 := client.ReadAnswer()
 		if err2 != nil {
-			Logger.Errorf("Error reading respnse for command %s, Details: %s", cmd, err2.Error())
+			Logger.Errorf("Error reading response for command %s, Details: %s", cmd, err2.Error())
 			exitClient(client)
 			return
 		}
+		exitClient(client)
 		if len(answer) >= 2 && "ko" == answer[0:2] {
 			Logger.Errorf("Command Message '%s' sent but failed!!", cmd)
 			Logger.Errorf("Response: %v", answer)
@@ -167,8 +183,14 @@ func main() {
 	exitClient(client)
 }
 
+var exited bool = false
+
 func exitClient(client common.TCPClient) {
-	client.SendText("exit")
-	time.Sleep(2 * time.Second)
-	Logger.Success("Exit!!")
+	if !exited {
+		client.SendText("exit")
+		client.Close()
+		time.Sleep(2 * time.Second)
+		Logger.Success("Exit!!")
+		exited = true
+	}
 }
