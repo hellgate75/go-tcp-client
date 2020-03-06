@@ -25,15 +25,20 @@ type tcpClient struct {
 }
 
 func (tcpClient *tcpClient) Open(insecureSkipVerify bool) error {
-	Logger.Debugf("client: using client key: <%s>, cert: <%s> ", tcpClient.Cert.Key, tcpClient.Cert.Cert)
-	cert, err := tls.LoadX509KeyPair(tcpClient.Cert.Cert, tcpClient.Cert.Key)
-	if err != nil {
-		Logger.Fatalf("server: loadkeys: %s", err)
-		return errors.New(fmt.Sprintf("server: loadkeys: %s", err))
+	config := tls.Config{InsecureSkipVerify: insecureSkipVerify}
+
+	if tcpClient.Cert.Key != "" &&  tcpClient.Cert.Cert != "" {
+		Logger.Debugf("client: using client key: <%s>, cert: <%s> ", tcpClient.Cert.Key, tcpClient.Cert.Cert)
+		cert, err := tls.LoadX509KeyPair(tcpClient.Cert.Cert, tcpClient.Cert.Key)
+		if err != nil {
+			Logger.Errorf("client: Unable to load key : %s and certificate: %s", tcpClient.Cert.Key, tcpClient.Cert.Cert)
+			Logger.Fatalf("client: loadkeys: %s", err)
+		}
+		config.Certificates=[]tls.Certificate{cert}
 	}
-	config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: insecureSkipVerify}
-	Logger.Debugf("client: ca cert: <%s> ", tcpClient.CaCert)
+
 	if "" != tcpClient.CaCert {
+		Logger.Debugf("client: Using CA cert: <%s> and insecure skip verify", tcpClient.CaCert)
 		rootCAs, _ := x509.SystemCertPool()
 		if rootCAs == nil {
 			rootCAs = x509.NewCertPool()
@@ -47,7 +52,7 @@ func (tcpClient *tcpClient) Open(insecureSkipVerify bool) error {
 
 		// Append our cert to the system pool
 		if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
-			Logger.Warn("No certs appended, using system certs only")
+			Logger.Warn("No certs appended, using system certificates only")
 		} else {
 			config.RootCAs = rootCAs
 			config.InsecureSkipVerify = true
@@ -55,6 +60,7 @@ func (tcpClient *tcpClient) Open(insecureSkipVerify bool) error {
 
 	}
 	service := fmt.Sprintf("%s:%s", tcpClient.IpAddress, tcpClient.Port)
+	Logger.Debugf("Connecting to service: %s", service)
 	conn, err := tls.Dial("tcp", service, &config)
 	if err != nil {
 		Logger.Fatalf("client: dial: %s", err)
@@ -63,14 +69,20 @@ func (tcpClient *tcpClient) Open(insecureSkipVerify bool) error {
 	tcpClient.conn = conn
 	Logger.Debugf("client: connected to: %v", conn.RemoteAddr())
 	state := conn.ConnectionState()
+	Logger.Trace("Uaing certificates: ")
 	for _, v := range state.PeerCertificates {
-		Logger.Debug(x509.MarshalPKIXPublicKey(v.PublicKey))
-		Logger.Debug(v.Subject)
+		bytes, errBts := x509.MarshalPKIXPublicKey(v.PublicKey)
+		if errBts == nil {
+			Logger.Trace("Public Key: ", string(bytes))
+		} else {
+			Logger.Trace("Public Key: Unavailable")
+		}
+		Logger.Trace(v.Subject)
 	}
-	Logger.Debug("client: handshake: ", state.HandshakeComplete)
-	Logger.Debug("client: mutual: ", state.NegotiatedProtocolIsMutual)
+	Logger.Trace("client: handshake: ", state.HandshakeComplete)
+	Logger.Trace("client: mutual: ", state.NegotiatedProtocolIsMutual)
 	Logger.Debug("client: Connected!!")
-	Logger.Debug("client: Waiting for server OS type...")
+	Logger.Trace("client: Waiting for server OS type...")
 	common.WriteString("os-name", conn)
 	time.Sleep(2 * time.Second)
 	os, errWelcome := common.ReadString(conn)
@@ -79,7 +91,7 @@ func (tcpClient *tcpClient) Open(insecureSkipVerify bool) error {
 		return err
 	}
 	tcpClient.OS = os
-	Logger.Warnf("Remote server os: %s", os)
+	Logger.Debugf("Remote server os: %s", os)
 	return nil
 }
 
