@@ -62,7 +62,6 @@ func (tranfer *tranfer) SendMessage(conn *tls.Conn, params ...interface{}) error
 	if n0 == 0 {
 		return errors.New(fmt.Sprintf("Unable to send command: %s", serverCommand))
 	}
-	time.Sleep(3 * time.Second)
 	n00, err3c := common.WriteString(typeOfFile, conn)
 	if err3c != nil {
 		return err3c
@@ -70,7 +69,6 @@ func (tranfer *tranfer) SendMessage(conn *tls.Conn, params ...interface{}) error
 	if n00 == 0 {
 		return errors.New(fmt.Sprintf("Unable to send type: %s", typeOfFile))
 	}
-	time.Sleep(3 * time.Second)
 	n1, err4 := common.WriteString(destination, conn)
 	if err4 != nil {
 		return err4
@@ -78,7 +76,6 @@ func (tranfer *tranfer) SendMessage(conn *tls.Conn, params ...interface{}) error
 	if n1 == 0 {
 		return errors.New(fmt.Sprintf("Unable to send destination folder: %s", destination))
 	}
-	time.Sleep(3 * time.Second)
 	n2, err5 := common.WriteString(perm, conn)
 	if err5 != nil {
 		return err5
