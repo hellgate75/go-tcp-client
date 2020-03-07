@@ -84,7 +84,7 @@ func (tcpClient *tcpClient) Open(insecureSkipVerify bool) error {
 	Logger.Debug("client: Connected!!")
 	time.Sleep(3 * time.Second)
 	common.WriteString("os-name", conn)
-	Logger.Debug("client: Waiting for remotw server OS type...")
+	Logger.Debug("client: Waiting for remote server OS type...")
 	os, errWelcome := common.ReadString(conn)
 	if errWelcome != nil {
 		Logger.Error("Error acquiring OS: ", errWelcome.Error())
