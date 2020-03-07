@@ -30,6 +30,7 @@ func init() {
 	fSet.StringVar(&host, "ip", common.DEFAULT_CLIENT_IP_ADDRESS, "Server ip address")
 	fSet.StringVar(&port, "port", common.DEFAULT_PORT, "Server port")
 	fSet.StringVar(&verbosity, "verbosity", "INFO", "Logger verbosity level [TRACE,DEBUG,INFO,ERROR,FATAL] ")
+	worker.MainAccess = true
 }
 
 func main() {

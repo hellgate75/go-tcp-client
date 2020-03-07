@@ -14,7 +14,7 @@ import (
 )
 
 var Logger log.Logger = log.NewAppLogger("go-tcp-client", "INFO")
-
+var MainAccess bool = false
 type tcpClient struct {
 	Cert      common.CertificateKeyPair
 	CaCert    string
@@ -172,7 +172,9 @@ func (tcpClient *tcpClient) Close() error {
 }
 
 func NewClient(cert common.CertificateKeyPair, caCert string, ipAddress string, port string) common.TCPClient {
-	proxy.Logger = Logger
+	if ! MainAccess {
+		proxy.Logger = Logger
+	}
 	return &tcpClient{
 		Cert:      cert,
 		IpAddress: ipAddress,

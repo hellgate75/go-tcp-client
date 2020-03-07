@@ -157,7 +157,9 @@ func (shell *shell) SendMessage(conn *tls.Conn, params ...interface{}) error {
 		if errContinue  != nil {
 			return errors.New(fmt.Sprintf("Receive pre-conditions error -> shell command: %v, Details: %s", script, errContinue.Error()))
 		}
-		shell.logger.Debugf("Pre-conditions message: <%s>", state)
+		if shell.logger != nil {
+			shell.logger.Debugf("Pre-conditions message: <%s>", state)
+		}
 		if len(state) > 2 && "ko" == state[:2] {
 			return errors.New(fmt.Sprintf("Pre-conditions failed -> shell command: %v, Details: %s", script, state))
 		}
@@ -230,6 +232,11 @@ func (shell *shell) SendMessage(conn *tls.Conn, params ...interface{}) error {
 		scanner := bufio.NewScanner(stdin)
 		for scanner.Scan() {
 			var currentCommand string = scanner.Text()
+			if "" == currentCommand {
+				color.Yellow.Println("Empty command, try again...")
+				color.Green.Printf("shell> ")
+				continue
+			}
 			color.Yellow.Printf("Sending request to the server...\n")
 			if "exit" == strings.ToLower(currentCommand) {
 				if stdout != nil {
@@ -283,7 +290,7 @@ func (shell *shell) SendMessage(conn *tls.Conn, params ...interface{}) error {
 				}
 				return errors.New(fmt.Sprintf("Unable to send command ->  %v", currentCommand))
 			}
-			time.Sleep(3 * time.Second)
+			//time.Sleep(3 * time.Second)
 			content, errAnswer := common.Read(conn)
 			if errAnswer != nil {
 				common.WriteString("exit", conn)
@@ -302,6 +309,7 @@ func (shell *shell) SendMessage(conn *tls.Conn, params ...interface{}) error {
 				}
 				return errAnswer
 			}
+			//color.LightYellow.Printf("Answer: %s\n", content)
 			if stdout != nil {
 				if nil != shell.logger {
 					shell.logger.Debug("Response: ", string(content))
@@ -342,5 +350,7 @@ func (shell *shell) Helper() string {
 }
 
 func New() common.Sender {
-	return &shell{}
+	return &shell{
+		logger: nil,
+	}
 }
