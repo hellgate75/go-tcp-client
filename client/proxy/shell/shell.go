@@ -143,21 +143,27 @@ func (shell *shell) SendMessage(conn *tls.Conn, params ...interface{}) error {
 				return errors.New(fmt.Sprintf("Unable to send COMMAND -> script file type: %v", isScriptFile))
 			}
 			script = shellCommandOrScript
+			n3, err6 := common.Write([]byte(script), conn)
+			if err6 != nil {
+				common.WriteString("exit", conn)
+				return err6
+			}
+			if n3 == 0 {
+				common.WriteString("exit", conn)
+				return errors.New(fmt.Sprintf("Unable to send data -> shell command: %v", script))
+			}
 		}
-		time.Sleep(3 * time.Second)
-		n3, err6 := common.Write([]byte(script), conn)
-		if err6 != nil {
-			common.WriteString("exit", conn)
-			return err6
+		state, errContinue := common.ReadString(conn)
+		if errContinue  != nil {
+			return errors.New(fmt.Sprintf("Receive pre-conditions error -> shell command: %v, Details: %s", script, errContinue.Error()))
 		}
-		if n3 == 0 {
-			common.WriteString("exit", conn)
-			return errors.New(fmt.Sprintf("Unable to send data -> shell command: %v", script))
+		shell.logger.Debugf("Pre-conditions message: <%s>", state)
+		if len(state) > 2 && "ko" == state[:2] {
+			return errors.New(fmt.Sprintf("Pre-conditions failed -> shell command: %v, Details: %s", script, state))
 		}
-		time.Sleep(3 * time.Second)
 		content, errAnswer := common.Read(conn)
 		if errAnswer != nil {
-			return errors.New(fmt.Sprintf("Receive data -> shell command: %v", script))
+			return errors.New(fmt.Sprintf("Receive data -> shell command: %v, Details: %s", script, errAnswer.Error()))
 		}
 		if nil != shell.logger {
 			shell.logger.Debugf("Response: %s", string(content))
@@ -170,7 +176,6 @@ func (shell *shell) SendMessage(conn *tls.Conn, params ...interface{}) error {
 				return err
 			}
 		}
-		//common.Write(content, conn)
 	} else {
 		n2, err5 := common.WriteString("shell", conn)
 		if err5 != nil {

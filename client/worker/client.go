@@ -82,9 +82,9 @@ func (tcpClient *tcpClient) Open(insecureSkipVerify bool) error {
 	Logger.Trace("client: handshake: ", state.HandshakeComplete)
 	Logger.Trace("client: mutual: ", state.NegotiatedProtocolIsMutual)
 	Logger.Debug("client: Connected!!")
-	Logger.Trace("client: Waiting for server OS type...")
+	time.Sleep(3 * time.Second)
 	common.WriteString("os-name", conn)
-	time.Sleep(2 * time.Second)
+	Logger.Debug("client: Waiting for remotw server OS type...")
 	os, errWelcome := common.ReadString(conn)
 	if errWelcome != nil {
 		Logger.Error("Error acquiring OS: ", errWelcome.Error())
