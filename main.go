@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gookit/color"
 	"github.com/hellgate75/go-tcp-client/client/worker"
+	"github.com/hellgate75/go-tcp-client/client/proxy"
 	"github.com/hellgate75/go-tcp-client/common"
 	"github.com/hellgate75/go-tcp-client/log"
 	"os"
@@ -32,6 +33,9 @@ func init() {
 	fSet.StringVar(&port, "port", common.DEFAULT_PORT, "Server port")
 	fSet.StringVar(&verbosity, "verbosity", "INFO", "Logger verbosity level [TRACE,DEBUG,INFO,ERROR,FATAL] ")
 	fSet.Int64Var(&readTimeout, "readTimeout", 5, "Message Read timeout in seconds, used to keep listening for answer from clients")
+	fSet.StringVar(&proxy.PluginLibrariesFolder, "prugins-folder", proxy.PluginLibrariesFolder, "Folder where seek for plugin(s) library [Linux Only]")
+	fSet.StringVar(&proxy.PluginLibrariesExtension, "prugins-extension", proxy.PluginLibrariesExtension, "File extension for plugin libraries [Linux Only]")
+	fSet.BoolVar(&proxy.UsePlugins, "use-plugins", proxy.UsePlugins, "Enable/disable plugins [true|false] [Linux Only]")
 	worker.MainAccess = true
 }
 
