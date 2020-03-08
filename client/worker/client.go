@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"github.com/hellgate75/go-tcp-client/client/proxy"
 	"github.com/hellgate75/go-tcp-client/common"
-	"github.com/hellgate75/go-tcp-client/log"
+	"github.com/hellgate75/go-tcp-common/log"
 	"io/ioutil"
 	"time"
 )

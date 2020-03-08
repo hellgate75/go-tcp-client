@@ -7,7 +7,7 @@ import (
 	"github.com/hellgate75/go-tcp-client/client/worker"
 	"github.com/hellgate75/go-tcp-client/client/proxy"
 	"github.com/hellgate75/go-tcp-client/common"
-	"github.com/hellgate75/go-tcp-client/log"
+	"github.com/hellgate75/go-tcp-common/log"
 	"os"
 	"strings"
 	"time"

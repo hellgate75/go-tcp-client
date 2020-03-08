@@ -2,7 +2,7 @@ package common
 
 import (
 	"crypto/tls"
-	"github.com/hellgate75/go-tcp-client/log"
+	"github.com/hellgate75/go-tcp-common/log"
 )
 
 type Sender interface {

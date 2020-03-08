@@ -3,7 +3,7 @@ package proxy
 import (
 	"fmt"
 	"github.com/hellgate75/go-tcp-client/common"
-	"github.com/hellgate75/go-tcp-client/log"
+	"github.com/hellgate75/go-tcp-common/log"
 	"github.com/hellgate75/go-tcp-modules/client/proxy"
 	"os"
 	"path/filepath"
