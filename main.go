@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-var Logger log.Logger = log.NewAppLogger("go-tcp-client", "INFO")
+var Logger log.Logger = log.NewLogger("go-tcp-client", "INFO")
 
 var certs string = ""
 var rootCA string = ""

@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-var Logger log.Logger = log.NewAppLogger("go-tcp-client", "INFO")
+var Logger log.Logger = log.NewLogger("go-tcp-client", "INFO")
 var MainAccess bool = false
 type tcpClient struct {
 	Cert      common.CertificateKeyPair
