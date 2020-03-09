@@ -14,6 +14,7 @@ import (
 )
 
 var Logger log.Logger = log.NewLogger("go-tcp-client", "INFO")
+
 var MainAccess bool = false
 type tcpClient struct {
 	Cert      common.CertificateKeyPair
@@ -141,7 +142,10 @@ func (tcpClient *tcpClient) ApplyCommand(command string, params ...interface{}) 
 		Logger.Errorf("client: apply command: %s", err.Error())
 		return errors.New(fmt.Sprintf("client: write: %s", err.Error()))
 	}
-	sender.SetLogger(Logger)
+	if ! MainAccess {
+		sender.SetLogger(Logger)
+	}
+	Logger.Debugf("Logger is affiliated for the current sender("+command+"): %v", Logger.IsAffiliated())
 	err = sender.SendMessage(tcpClient.conn, params...)
 	if err != nil {
 		Logger.Errorf("client: command (%s): %s", command, err.Error())
@@ -173,9 +177,6 @@ func (tcpClient *tcpClient) Close() error {
 }
 
 func NewClient(cert common.CertificateKeyPair, caCert string, ipAddress string, port string) common.TCPClient {
-	if ! MainAccess {
-		proxy.Logger = Logger
-	}
 	return &tcpClient{
 		Cert:      cert,
 		IpAddress: ipAddress,
