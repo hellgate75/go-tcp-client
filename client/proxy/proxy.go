@@ -28,7 +28,7 @@ func GetSender(command string) (common.Sender, error) {
 			}
 		})
 		if sender != nil {
-
+			return sender, nil
 		}
 	}
 	sender, errOrig := proxy.GetSender(command)
