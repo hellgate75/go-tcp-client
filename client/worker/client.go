@@ -141,6 +141,7 @@ func (tcpClient *tcpClient) ApplyCommand(command string, params ...interface{}) 
 		Logger.Errorf("client: apply command: %s", err.Error())
 		return errors.New(fmt.Sprintf("client: write: %s", err.Error()))
 	}
+	sender.SetLogger(Logger)
 	err = sender.SendMessage(tcpClient.conn, params...)
 	if err != nil {
 		Logger.Errorf("client: command (%s): %s", command, err.Error())

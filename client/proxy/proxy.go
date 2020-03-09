@@ -28,6 +28,7 @@ func GetSender(command string) (common.Sender, error) {
 			}
 		})
 		if sender != nil {
+			sender.SetLogger(Logger)
 			return sender, nil
 		}
 	}
