@@ -33,8 +33,8 @@ func init() {
 	fSet.StringVar(&port, "port", common.DEFAULT_PORT, "Server port")
 	fSet.StringVar(&verbosity, "verbosity", "INFO", "Logger verbosity level [TRACE,DEBUG,INFO,ERROR,FATAL] ")
 	fSet.Int64Var(&readTimeout, "readTimeout", 5, "Message Read timeout in seconds, used to keep listening for answer from clients")
-	fSet.StringVar(&proxy.PluginLibrariesFolder, "prugins-folder", proxy.PluginLibrariesFolder, "Folder where seek for plugin(s) library [Linux Only]")
-	fSet.StringVar(&proxy.PluginLibrariesExtension, "prugins-extension", proxy.PluginLibrariesExtension, "File extension for plugin libraries [Linux Only]")
+	fSet.StringVar(&proxy.PluginLibrariesFolder, "plugins-folder", proxy.PluginLibrariesFolder, "Folder where seek for plugin(s) library [Linux Only]")
+	fSet.StringVar(&proxy.PluginLibrariesExtension, "plugins-extension", proxy.PluginLibrariesExtension, "File extension for plugin libraries [Linux Only]")
 	fSet.BoolVar(&proxy.UsePlugins, "use-plugins", proxy.UsePlugins, "Enable/disable plugins [true|false] [Linux Only]")
 	worker.MainAccess = true
 }
