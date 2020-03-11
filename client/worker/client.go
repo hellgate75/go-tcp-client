@@ -34,8 +34,9 @@ func (tcpClient *tcpClient) Open(insecureSkipVerify bool) error {
 		if err != nil {
 			Logger.Errorf("client: Unable to load key : %s and certificate: %s", tcpClient.Cert.Key, tcpClient.Cert.Cert)
 			Logger.Fatalf("client: loadkeys: %s", err)
+		} else {
+			config.Certificates=[]tls.Certificate{cert}
 		}
-		config.Certificates=[]tls.Certificate{cert}
 	}
 
 	if "" != tcpClient.CaCert {
@@ -49,16 +50,15 @@ func (tcpClient *tcpClient) Open(insecureSkipVerify bool) error {
 		certs, err := ioutil.ReadFile(tcpClient.CaCert)
 		if err != nil {
 			Logger.Fatalf("Failed to append %q to RootCAs: %v", tcpClient.CaCert, err)
-		}
-
-		// Append our cert to the system pool
-		if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
-			Logger.Warn("No certs appended, using system certificates only")
 		} else {
-			config.RootCAs = rootCAs
-			config.InsecureSkipVerify = true
+			// Append our cert to the system pool
+			if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
+				Logger.Warn("No certs appended, using system certificates only")
+			} else {
+				config.RootCAs = rootCAs
+				config.InsecureSkipVerify = true
+			}
 		}
-
 	}
 	service := fmt.Sprintf("%s:%s", tcpClient.IpAddress, tcpClient.Port)
 	Logger.Debugf("Connecting to service: %s", service)
