@@ -16,6 +16,9 @@ import (
 var Logger log.Logger = log.NewLogger("go-tcp-client", "INFO")
 
 var certs string = ""
+var useTls bool = false
+var insecure bool = false
+var certsStr string = ""
 var rootCA string = ""
 var keys string = ""
 var host string = ""
@@ -27,6 +30,8 @@ var fSet *flag.FlagSet
 func init() {
 	fSet = flag.NewFlagSet("go-tcp-client", flag.ContinueOnError)
 	fSet.StringVar(&certs, "certs", "certs/server.pem", "Comma separated pem server certificate list")
+	fSet.BoolVar(&insecure, "insecure-keys", true, "Use insecure keys authorization")
+	fSet.BoolVar(&useTls, "use-tls", true, "Use SSL/TLS protocol")
 	fSet.StringVar(&rootCA, "root-ca", "certs/ca.crt", "Root CA certificate for insecure server config")
 	fSet.StringVar(&keys, "keys", "certs/server.key", "Comma separated server certs keys list")
 	fSet.StringVar(&host, "ip", common.DEFAULT_CLIENT_IP_ADDRESS, "Server ip address")
@@ -86,7 +91,7 @@ func main() {
 		Cert: certs,
 		Key:  keys,
 	}
-	client := worker.NewClient(certPair, rootCA, host, port)
+	client := worker.NewClient(certPair, rootCA, insecure, host, port)
 	if len(commands) > 0 {
 		var cmd string = commands[0]
 
@@ -103,7 +108,7 @@ func main() {
 		}
 		Logger.Debugf("Summary:\nIp: %s\nPort: %s\ncerts: %v\nkeys: %v\n", host, port, certs, keys)
 		defer client.Close()
-		errOpen := client.Open(true)
+		errOpen := client.Open(useTls)
 		if errOpen != nil {
 			Logger.Errorf("Client start-up error: %s\n", errOpen.Error())
 			panic(errOpen.Error())

@@ -17,46 +17,48 @@ var Logger log.Logger = log.NewLogger("go-tcp-client", "INFO")
 
 var MainAccess bool = false
 type tcpClient struct {
-	Cert      common.CertificateKeyPair
-	CaCert    string
-	IpAddress string
-	Port      string
-	conn      *tls.Conn
-	OS        string
+	Cert      	common.CertificateKeyPair
+	CaCert    	string
+	IpAddress 	string
+	Insecure 	bool
+	Port      	string
+	conn      	*tls.Conn
+	OS        	string
 }
 
-func (tcpClient *tcpClient) Open(insecureSkipVerify bool) error {
-	config := tls.Config{InsecureSkipVerify: insecureSkipVerify}
-
-	if tcpClient.Cert.Key != "" &&  tcpClient.Cert.Cert != "" {
-		Logger.Debugf("client: using client key: <%s>, cert: <%s> ", tcpClient.Cert.Key, tcpClient.Cert.Cert)
-		cert, err := tls.LoadX509KeyPair(tcpClient.Cert.Cert, tcpClient.Cert.Key)
-		if err != nil {
-			Logger.Errorf("client: Unable to load key : %s and certificate: %s", tcpClient.Cert.Key, tcpClient.Cert.Cert)
-			Logger.Fatalf("client: loadkeys: %s", err)
-		} else {
-			config.Certificates=[]tls.Certificate{cert}
-		}
-	}
-
-	if "" != tcpClient.CaCert {
-		Logger.Debugf("client: Using CA cert: <%s> and insecure skip verify", tcpClient.CaCert)
-		rootCAs, _ := x509.SystemCertPool()
-		if rootCAs == nil {
-			rootCAs = x509.NewCertPool()
-		}
-
-		// Read in the cert file
-		certs, err := ioutil.ReadFile(tcpClient.CaCert)
-		if err != nil {
-			Logger.Fatalf("Failed to append %q to RootCAs: %v", tcpClient.CaCert, err)
-		} else {
-			// Append our cert to the system pool
-			if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
-				Logger.Warn("No certs appended, using system certificates only")
+func (tcpClient *tcpClient) Open(useTls bool) error {
+	config := tls.Config{InsecureSkipVerify: tcpClient.Insecure}
+	if useTls {
+		if tcpClient.Cert.Key != "" &&  tcpClient.Cert.Cert != "" {
+			Logger.Debugf("client: using client key: <%s>, cert: <%s> ", tcpClient.Cert.Key, tcpClient.Cert.Cert)
+			cert, err := tls.LoadX509KeyPair(tcpClient.Cert.Cert, tcpClient.Cert.Key)
+			if err != nil {
+				Logger.Errorf("client: Unable to load key : %s and certificate: %s", tcpClient.Cert.Key, tcpClient.Cert.Cert)
+				Logger.Fatalf("client: loadkeys: %s", err)
 			} else {
-				config.RootCAs = rootCAs
-				config.InsecureSkipVerify = true
+				config.Certificates=[]tls.Certificate{cert}
+			}
+		}
+
+		if "" != tcpClient.CaCert {
+			Logger.Debugf("client: Using CA cert: <%s> and insecure skip verify", tcpClient.CaCert)
+			rootCAs, _ := x509.SystemCertPool()
+			if rootCAs == nil {
+				rootCAs = x509.NewCertPool()
+			}
+
+			// Read in the cert file
+			certs, err := ioutil.ReadFile(tcpClient.CaCert)
+			if err != nil {
+				Logger.Fatalf("Failed to append %q to RootCAs: %v", tcpClient.CaCert, err)
+			} else {
+				// Append our cert to the system pool
+				if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
+					Logger.Warn("No certs appended, using system certificates only")
+				} else {
+					config.RootCAs = rootCAs
+					config.InsecureSkipVerify = true
+				}
 			}
 		}
 	}
@@ -176,12 +178,13 @@ func (tcpClient *tcpClient) Close() error {
 	return nil
 }
 
-func NewClient(cert common.CertificateKeyPair, caCert string, ipAddress string, port string) common.TCPClient {
+func NewClient(cert common.CertificateKeyPair, caCert string, insecure bool, ipAddress string, port string) common.TCPClient {
 	return &tcpClient{
 		Cert:      cert,
 		IpAddress: ipAddress,
 		Port:      port,
 		CaCert:    caCert,
+		Insecure:  insecure,
 	}
 }
 
